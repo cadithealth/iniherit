@@ -4,3 +4,6 @@
 
 * There should be a command-line tool that converts iniherit-enabled
   INI files to flat "standard" INI files.
+
+* Implement `write`... this could be done by tracking which config
+  items are "dirty", and only saving those to the base INI...
