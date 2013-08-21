@@ -6,25 +6,28 @@
 # copy: (C) Copyright 2013 Cadit Health Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
-import ConfigParser
+try:
+  import ConfigParser as CP
+except ImportError:
+  import configparser as CP
 from .parser import RawConfigParser, ConfigParser, SafeConfigParser
 
 #------------------------------------------------------------------------------
 def install_globally():
   '''
-  Installs :class:`iniherit.parser.RawConfigParser` as the
-  global :class:`ConfigParser.RawConfigParser` (and the standard and
-  safe sub-classes). Note that this is what one calls
-  "dangerous". Please use with extreme caution.
+  Installs :class:`iniherit.parser.RawConfigParser` as the global
+  :class:`ConfigParser.RawConfigParser` (and the standard and safe
+  sub-classes). Note that this is what one calls "dangerous". Please
+  use with extreme caution.
   '''
-  if ConfigParser.ConfigParser is ConfigParser:
+  if CP.ConfigParser is ConfigParser:
     return
-  ConfigParser._real_RawConfigParser  = ConfigParser.RawConfigParser
-  ConfigParser._real_ConfigParser     = ConfigParser.ConfigParser
-  ConfigParser._real_SafeConfigParser = ConfigParser.SafeConfigParser
-  ConfigParser.RawConfigParser        = RawConfigParser
-  ConfigParser.ConfigParser           = ConfigParser
-  ConfigParser.SafeConfigParser       = SafeConfigParser
+  CP._real_RawConfigParser  = CP.RawConfigParser
+  CP._real_ConfigParser     = CP.ConfigParser
+  CP._real_SafeConfigParser = CP.SafeConfigParser
+  CP.RawConfigParser        = RawConfigParser
+  CP.ConfigParser           = ConfigParser
+  CP.SafeConfigParser       = SafeConfigParser
 
 #------------------------------------------------------------------------------
 # end of $Id$
