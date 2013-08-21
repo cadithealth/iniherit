@@ -1,0 +1,6 @@
+* What about if the per-section inheritance references settings in the
+  DEFAULT section of the inherited file?... perhaps a flag to indicate
+  how to handle this?...
+
+* There should be a command-line tool that converts iniherit-enabled
+  INI files to flat "standard" INI files.
