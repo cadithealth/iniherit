@@ -7,7 +7,7 @@
 #------------------------------------------------------------------------------
 
 import unittest, io
-from iniherit.parser import Loader, IniheritConfigParser
+from iniherit.parser import Loader, ConfigParser, SafeConfigParser
 
 #------------------------------------------------------------------------------
 class ByteLoader(Loader):
@@ -41,7 +41,7 @@ test2 = the value "%(kw2)s" should be "base-kw2"
 kw1 = extend-kw1
 '''),
       ]
-    parser = IniheritConfigParser(loader=ByteLoader(dict(files)))
+    parser = ConfigParser(loader=ByteLoader(dict(files)))
     parser.read('extend.ini')
     self.assertEqual(parser.get('DEFAULT', 'kw1'), 'extend-kw1')
     self.assertEqual(parser.get('DEFAULT', 'kw2'), 'base-kw2')
@@ -75,7 +75,7 @@ kw3 = extend-kw3
 kw6 = extend-kw6
 '''),
       ]
-    parser = IniheritConfigParser(loader=ByteLoader(dict(files)))
+    parser = ConfigParser(loader=ByteLoader(dict(files)))
     parser.read('extend.ini')
     self.assertEqual(parser.get('DEFAULT', 'kw1'), 'extend-kw1')
     self.assertEqual(parser.get('DEFAULT', 'kw2'), 'override-kw2')
@@ -90,7 +90,7 @@ kw6 = extend-kw6
       ('base.ini',   '[DEFAULT]\nkw1 = base-kw1\n'),
       ('extend.ini', '[DEFAULT]\n%inherit = base.ini no-such-ini.ini\nkw2 = extend-kw2\n'),
       ]
-    parser = IniheritConfigParser(loader=ByteLoader(dict(files)))
+    parser = ConfigParser(loader=ByteLoader(dict(files)))
     self.assertRaises(IOError, parser.read, 'extend.ini')
 
   #----------------------------------------------------------------------------
@@ -100,7 +100,7 @@ kw6 = extend-kw6
       ('dir/mid.ini',  '[DEFAULT]\n%inherit = base.ini\n[section]\nkw2 = mid-kw2\n'),
       ('extend.ini',   '[DEFAULT]\n%inherit = dir/mid.ini\n[section]\nkw3 = extend-kw3\n'),
       ]
-    parser = IniheritConfigParser(loader=ByteLoader(dict(files)))
+    parser = ConfigParser(loader=ByteLoader(dict(files)))
     parser.read('extend.ini')
     self.assertEqual(parser.get('section', 'kw1'), 'base-kw1')
     self.assertEqual(parser.get('section', 'kw2'), 'mid-kw2')
@@ -112,7 +112,7 @@ kw6 = extend-kw6
       ('base + space.ini', '[DEFAULT]\nkw=word\n'),
       ('config.ini',       '[DEFAULT]\n%inherit = base%20%2b%20space.ini\n'),
       ]
-    parser = IniheritConfigParser(loader=ByteLoader(dict(files)))
+    parser = ConfigParser(loader=ByteLoader(dict(files)))
     parser.read('config.ini')
     self.assertEqual(parser.get('DEFAULT', 'kw'), 'word')
 
@@ -123,11 +123,22 @@ kw6 = extend-kw6
       ('other.ini',  '[DEFAULT]\nkw2=word\n[so]\nzig=zag\n'),
       ('config.ini', '[s]\n%inherit = base.ini other.ini[so]\nx=z\n'),
       ]
-    parser = IniheritConfigParser(loader=ByteLoader(dict(files)))
+    parser = ConfigParser(loader=ByteLoader(dict(files)))
     parser.read('config.ini')
     self.assertEqual(parser.items('DEFAULT'), [])
     self.assertEqual(sorted(parser.items('s')),
                      sorted(dict(foo='bar', zig='zag', x='z').items()))
+
+  #----------------------------------------------------------------------------
+  def test_iniherit_invalidInterpolationValues(self):
+    files = [
+      ('config.ini',   '[logger]\ntimefmt=%H:%M:%S\n'),
+      ]
+    parser = SafeConfigParser(loader=ByteLoader(dict(files)))
+    parser.read('config.ini')
+    self.assertEqual(parser.items('DEFAULT'), [])
+    self.assertEqual(parser.get('logger', 'timefmt', raw=True), '%H:%M:%S')
+    
 
 #------------------------------------------------------------------------------
 # end of $Id$

@@ -8,17 +8,17 @@
 
 import io, os.path, urllib
 try:
-  import ConfigParser
+  import ConfigParser as CP
 except ImportError:
-  import configparser as ConfigParser
+  import configparser as CP
 
 # TODO: PY3 added a `ConfigParser.read_dict` that should probably
 #       be overridden as well...
 # TODO: should `ConfigParser.set()` be checked for option==INHERITTAG?...
 
 __all__ = (
-  'Loader', 'IniheritMixin', 'IniheritRawConfigParser',
-  'IniheritConfigParser', 'IniheritSafeConfigParser',
+  'Loader', 'IniheritMixin', 'RawConfigParser',
+  'ConfigParser', 'SafeConfigParser',
   )
 
 #------------------------------------------------------------------------------
@@ -28,9 +28,9 @@ class Loader(object):
       return open(name)
     return open(name, encoding=encoding)
 
-_real_RawConfigParser  = ConfigParser.RawConfigParser
-_real_ConfigParser     = ConfigParser.ConfigParser
-_real_SafeConfigParser = ConfigParser.SafeConfigParser
+_real_RawConfigParser  = CP.RawConfigParser
+_real_ConfigParser     = CP.ConfigParser
+_real_SafeConfigParser = CP.SafeConfigParser
 
 DEFAULT_INHERITTAG = '%inherit'
 
@@ -41,7 +41,7 @@ class IniheritMixin(object):
   def __init__(self, *args, **kw):
     self.loader = kw.get('loader', None) or Loader()
     self.IM_INHERITTAG  = DEFAULT_INHERITTAG
-    self.IM_DEFAULTSECT = getattr(self, 'default_section', ConfigParser.DEFAULTSECT)
+    self.IM_DEFAULTSECT = getattr(self, 'default_section', CP.DEFAULTSECT)
 
   #----------------------------------------------------------------------------
   def read(self, filenames, encoding=None):
@@ -121,7 +121,7 @@ class IniheritMixin(object):
         self._apply(self._readRecursive(curfp, curname, encoding=encoding), ret,
                     sections={fromsect: section})
       for k, v in retorig.items():
-        ret.set(section, k, v)
+        _real_RawConfigParser.set(ret, section, k, v)
     return ret
 
   #----------------------------------------------------------------------------
@@ -130,7 +130,7 @@ class IniheritMixin(object):
     #       the default section with the exact same value... ugh.
     if sections is None:
       for option, value in src.items(self.IM_DEFAULTSECT):
-        dst.set(self.IM_DEFAULTSECT, option, value)
+        _real_RawConfigParser.set(dst, self.IM_DEFAULTSECT, option, value)
     if sections is None:
       sections = {s: s for s in src.sections()}
     for srcsect, dstsect in sections.items():
@@ -140,7 +140,7 @@ class IniheritMixin(object):
         if src.has_option(self.IM_DEFAULTSECT, option) \
             and value == src.get(self.IM_DEFAULTSECT, option):
           continue
-        dst.set(dstsect, option, value)
+        _real_RawConfigParser.set(dst, dstsect, option, value)
 
   #----------------------------------------------------------------------------
   def write(self, *args, **kw):
@@ -150,20 +150,20 @@ class IniheritMixin(object):
 
 #------------------------------------------------------------------------------
 # todo: i'm a little worried about the diamond inheritance here...
-class IniheritRawConfigParser(IniheritMixin, _real_RawConfigParser):
+class RawConfigParser(IniheritMixin, _real_RawConfigParser):
   def __init__(self, *args, **kw):
     loader = kw.pop('loader', None)
     IniheritMixin.__init__(self, loader=loader)
     _real_RawConfigParser.__init__(self, *args, **kw)
-class IniheritConfigParser(IniheritRawConfigParser, _real_ConfigParser):
+class ConfigParser(RawConfigParser, _real_ConfigParser):
   def __init__(self, *args, **kw):
     loader = kw.pop('loader', None)
-    IniheritRawConfigParser.__init__(self, loader=loader)
+    RawConfigParser.__init__(self, loader=loader)
     _real_ConfigParser.__init__(self, *args, **kw)
-class IniheritSafeConfigParser(IniheritConfigParser, _real_SafeConfigParser):
+class SafeConfigParser(ConfigParser, _real_SafeConfigParser):
   def __init__(self, *args, **kw):
     loader = kw.pop('loader', None)
-    IniheritConfigParser.__init__(self, loader=loader)
+    ConfigParser.__init__(self, loader=loader)
     _real_SafeConfigParser.__init__(self, *args, **kw)
 
 #------------------------------------------------------------------------------

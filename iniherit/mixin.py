@@ -7,24 +7,24 @@
 #------------------------------------------------------------------------------
 
 import ConfigParser
-from .parser import IniheritRawConfigParser, IniheritConfigParser, IniheritSafeConfigParser
+from .parser import RawConfigParser, ConfigParser, SafeConfigParser
 
 #------------------------------------------------------------------------------
 def install_globally():
   '''
-  Installs :class:`iniherit.parser.IniheritRawConfigParser` as the
+  Installs :class:`iniherit.parser.RawConfigParser` as the
   global :class:`ConfigParser.RawConfigParser` (and the standard and
   safe sub-classes). Note that this is what one calls
   "dangerous". Please use with extreme caution.
   '''
-  if ConfigParser.ConfigParser is IniheritConfigParser:
+  if ConfigParser.ConfigParser is ConfigParser:
     return
   ConfigParser._real_RawConfigParser  = ConfigParser.RawConfigParser
   ConfigParser._real_ConfigParser     = ConfigParser.ConfigParser
   ConfigParser._real_SafeConfigParser = ConfigParser.SafeConfigParser
-  ConfigParser.RawConfigParser  = IniheritRawConfigParser
-  ConfigParser.ConfigParser     = IniheritConfigParser
-  ConfigParser.SafeConfigParser = IniheritSafeConfigParser
+  ConfigParser.RawConfigParser        = RawConfigParser
+  ConfigParser.ConfigParser           = ConfigParser
+  ConfigParser.SafeConfigParser       = SafeConfigParser
 
 #------------------------------------------------------------------------------
 # end of $Id$
