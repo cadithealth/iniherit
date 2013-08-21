@@ -102,12 +102,13 @@ INI file inheritance with the `iniherit` package:
       here.
 
 * The ``%inherit`` option points to a space-separated, URL-encoded,
-  list of files to inherit values from, for example:
+  list of files to inherit values from, whose values are loaded
+  depth-first, left-to-right. For example:
 
   .. code-block:: ini
 
     [DEFAULT]
-    %inherit = base.ini this%20space.ini
+    %inherit = base.ini file-with%20space.ini
 
 * To inherit only a specific section, add the ``%inherit`` option
   directly to the applicable section. By default, the section by the
@@ -130,8 +131,6 @@ INI file inheritance with the `iniherit` package:
   results!
 
   If a filename has "[" in the actual name, it can be URL-encoded.
-
-* The inheritance of values is loaded depth-first, left-to-right.
 
 * Filenames, if specified relatively, are taken to be relative to the
   current INI file.
