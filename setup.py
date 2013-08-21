@@ -30,14 +30,14 @@ requires = [
   ]
 
 entrypoints = {
-  'console_scripts': [
-    'iniherit           = iniherit.cli:main',
-    ],
+  # 'console_scripts': [
+  #   'iniherit           = iniherit.cli:main',
+  #   ],
   }
 
 setup(
   name                  = 'iniherit',
-  version               = '0.1.1',
+  version               = '0.1.2',
   description           = 'A ConfigParser subclass with file-specified inheritance.',
   long_description      = read('README.rst'),
   classifiers           = [
