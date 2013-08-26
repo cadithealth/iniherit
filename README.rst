@@ -70,7 +70,7 @@ an effect.
 The command-line program `iniherit` allows flattening of INI files
 (i.e. collapsing all inheritance rules), optionally in "watch" mode:
 
-.. code-block:: shell
+.. code-block:: bash
 
   $ iniherit --watch --interval 2 --verbose input.ini output.ini
   INFO:iniherit.cli:"source.ini" changed; updating output...
@@ -84,7 +84,7 @@ Installation
 Install iniherit via your favorite PyPI package manager works as
 follows:
 
-.. code-block:: shell
+.. code-block:: bash
 
   $ pip install iniherit
 
