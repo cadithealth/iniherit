@@ -103,7 +103,12 @@ def run(options):
 def main(argv=None):
 
   cli = argparse.ArgumentParser(
-    description = _('Flatten inherited attributes in INI files.'),
+    description = _(
+      'Flatten inherited attributes in INI files. With the "--watch"'
+      ' option, all input files can also be monitored for changes, and'
+      ' any change will cause the output file to be automatically'
+      ' updated.'
+      )
     )
 
   cli.add_argument(
@@ -126,17 +131,17 @@ def main(argv=None):
            ' used with "--watch") [defaults to %(default)s]'))
 
   cli.add_argument(
-    _('-o'), _('--output'), metavar=_('FILENAME'),
-    dest='output', default=sys.stdout,
-    help=_('set output filename; if unspecified or "-", sends output'
-           ' to STDOUT'))
-
-  cli.add_argument(
-    metavar=_('INI-FILENAME'),
+    metavar=_('INPUT'),
     dest='input', nargs='?', default=sys.stdin,
-    help=_('set input INI filename; if unspecified or "-", reads input'
+    help=_('set input filename; if unspecified or "-", reads input'
            ' from STDIN, in which case all inherits are taken relative'
            ' to the current working directory.'))
+
+  cli.add_argument(
+    metavar=_('OUTPUT'),
+    dest='output', nargs='?', default=sys.stdout,
+    help=_('set output filename; if unspecified or "-", writes output'
+           ' to STDOUT.'))
 
   options = cli.parse_args(argv)
 
