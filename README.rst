@@ -67,6 +67,16 @@ Note that the call to `install_globally()` must be invoked **before**
 any other module imports ConfigParser for the global override to have
 an effect.
 
+The command-line program `iniherit` allows flattening of INI files
+(i.e. collapsing all inheritance rules), optionally in "watch" mode:
+
+.. code-block:: shell
+
+  $ iniherit --watch --interval 2 --verbose input.ini output.ini
+  INFO:iniherit.cli:"source.ini" changed; updating output...
+  INFO:iniherit.cli:"inherited-file.ini" changed; updating output...
+  ^C
+
 
 Installation
 ============
