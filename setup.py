@@ -30,9 +30,9 @@ requires = [
   ]
 
 entrypoints = {
-  # 'console_scripts': [
-  #   'iniherit           = iniherit.cli:main',
-  #   ],
+  'console_scripts': [
+    'iniherit           = iniherit.cli:main',
+    ],
   }
 
 setup(
