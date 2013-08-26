@@ -37,7 +37,7 @@ entrypoints = {
 
 setup(
   name                  = 'iniherit',
-  version               = '0.1.5',
+  version               = '0.1.6',
   description           = 'A ConfigParser subclass with file-specified inheritance.',
   long_description      = read('README.rst'),
   classifiers           = [
