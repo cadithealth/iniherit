@@ -44,7 +44,7 @@ Then the following code will pass the assert:
 .. code-block:: python
 
   import iniherit
-  cfg = iniherit.IniheritSafeConfigParser()
+  cfg = iniherit.SafeConfigParser()
   cfg.read('config.ini')
 
   assert cfg.get('app:main', 'name') == 'My Application Name'
