@@ -35,11 +35,18 @@ _real_SafeConfigParser = CP.SafeConfigParser
 DEFAULT_INHERITTAG = '%inherit'
 
 #------------------------------------------------------------------------------
+# TODO: this would probably be *much* simpler with meta-classes...
+
+#------------------------------------------------------------------------------
 class IniheritMixin(object):
+
+  IM_INHERITTAG  = DEFAULT_INHERITTAG
+  IM_DEFAULTSECT = CP.DEFAULTSECT
 
   #----------------------------------------------------------------------------
   def __init__(self, *args, **kw):
     self.loader = kw.get('loader', None) or Loader()
+    self.inherit = True
     self.IM_INHERITTAG  = DEFAULT_INHERITTAG
     self.IM_DEFAULTSECT = getattr(self, 'default_section', CP.DEFAULTSECT)
 
@@ -60,16 +67,22 @@ class IniheritMixin(object):
 
   #----------------------------------------------------------------------------
   def _load(self, filename, encoding=None):
+    if not getattr(self, 'loader', None):
+      self.loader = Loader()
     return self.loader.load(filename, encoding=encoding)
 
   #----------------------------------------------------------------------------
   def _read(self, fp, fpname, encoding=None):
-    raw = self._readRecursive(fp, fpname, encoding=encoding)
-    self._apply(raw, self)
+    if getattr(self, 'inherit', True) or not hasattr(self, '_iniherit__read'):
+      raw = self._readRecursive(fp, fpname, encoding=encoding)
+      self._apply(raw, self)
+    else:
+      self._iniherit__read(fp, fpname)
 
   #----------------------------------------------------------------------------
   def _makeParser(self):
     ret = _real_RawConfigParser()
+    ret.inherit = False
     ## TODO: any other configurations that need to be copied into `ret`??...
     ret.optionxform = self.optionxform
     return ret
@@ -141,12 +154,6 @@ class IniheritMixin(object):
             and value == src.get(self.IM_DEFAULTSECT, option):
           continue
         _real_RawConfigParser.set(dst, dstsect, option, value)
-
-  #----------------------------------------------------------------------------
-  def write(self, *args, **kw):
-    # todo: this limitation *could* be lifted by keeping track of
-    #       which values are inherited, and not writing those back.
-    raise TypeError('IniheritMixin values cannot be written')
 
 #------------------------------------------------------------------------------
 # todo: i'm a little worried about the diamond inheritance here...

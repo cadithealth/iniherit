@@ -10,24 +10,45 @@ try:
   import ConfigParser as CP
 except ImportError:
   import configparser as CP
-from .parser import RawConfigParser, ConfigParser, SafeConfigParser
+# TODO: what is the PY3 version of 'new'?...
+import new
+from iniherit.parser import IniheritMixin
+
+attrs = [attr for attr in dir(IniheritMixin) if not attr.startswith('__')]
 
 #------------------------------------------------------------------------------
 def install_globally():
   '''
-  Installs :class:`iniherit.parser.RawConfigParser` as the global
-  :class:`ConfigParser.RawConfigParser` (and the standard and safe
-  sub-classes). Note that this is what one calls "dangerous". Please
-  use with extreme caution.
+  Installs '%inherit'-enabled processing as the global default. Note
+  that this is what one calls "dangerous". Please use with extreme
+  caution.
   '''
-  if CP.ConfigParser is ConfigParser:
+  if hasattr(CP.RawConfigParser, '_iniherit_installed_'):
     return
-  CP._real_RawConfigParser  = CP.RawConfigParser
-  CP._real_ConfigParser     = CP.ConfigParser
-  CP._real_SafeConfigParser = CP.SafeConfigParser
-  CP.RawConfigParser        = RawConfigParser
-  CP.ConfigParser           = ConfigParser
-  CP.SafeConfigParser       = SafeConfigParser
+  setattr(CP.RawConfigParser, '_iniherit_installed_', True)
+  for attr in attrs:
+    if hasattr(CP.RawConfigParser, attr):
+      setattr(CP.RawConfigParser,
+              '_iniherit_' + attr, getattr(CP.RawConfigParser, attr))
+    meth = getattr(IniheritMixin, attr)
+    if callable(meth):
+      meth = new.instancemethod(meth.im_func, None, CP.RawConfigParser)
+    setattr(CP.RawConfigParser, attr, meth)
+
+#------------------------------------------------------------------------------
+def uninstall_globally():
+  '''
+  Reverts the effects of :func:`install_globally`.
+  '''
+  if not hasattr(CP.ConfigParser, '_iniherit_installed_'):
+    return
+  delattr(CP.RawConfigParser, '_iniherit_installed_')
+  for attr in attrs:
+    if hasattr(CP.RawConfigParser, '_iniherit_' + attr):
+      xattr = getattr(CP.RawConfigParser, '_iniherit_' + attr)
+      setattr(CP.RawConfigParser, attr, xattr)
+    else:
+      delattr(CP.RawConfigParser, attr)
 
 #------------------------------------------------------------------------------
 # end of $Id$

@@ -162,10 +162,10 @@ INI file inheritance with the `iniherit` package:
 Gotchas
 =======
 
-* Because of how the INI files are loaded and manipulated, the
-  IniheritConfigParser's `write` method is disabled. This is because
-  the parser cannot know in which inherited file to save any value
-  changes. For writing INI files, you should use other ConfigParser
-  subclasses, such as `ConfigParser.RawConfigParser`.
+* After an inherit-enabled INI file is loaded, the ConfigParser no
+  longer has knowledge of where a particular option was loaded from or
+  how it was derived. For this reason, when the `write` method is
+  called, the ConfigParser generates an INI file without inheritance.
+  In other words, it flattens the inheritance tree.
 
 .. _ConfigParser: http://docs.python.org/2/library/configparser.html

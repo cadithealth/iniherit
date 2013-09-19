@@ -138,7 +138,37 @@ kw6 = extend-kw6
     parser.read('config.ini')
     self.assertEqual(parser.items('DEFAULT'), [])
     self.assertEqual(parser.get('logger', 'timefmt', raw=True), '%H:%M:%S')
-    
+
+  #----------------------------------------------------------------------------
+  def test_install_globally(self):
+    from iniherit.parser import CP
+    from iniherit.mixin import install_globally, uninstall_globally
+
+    files = [
+      ('base.ini', '[DEFAULT]\nkw = base-kw\n'),
+      ('config.ini', '[DEFAULT]\n%inherit = base.ini\n'),
+      ]
+    loader = ByteLoader(dict(files))
+
+    def do_the_test():
+      # first test that inheritance doesn't work
+      parser = CP.ConfigParser()
+      parser.loader = loader
+      parser.readfp(loader.load('config.ini'))
+      with self.assertRaises(CP.NoOptionError):
+        parser.get('DEFAULT', 'kw')
+      # then monkey-patch and test that inheritance does work
+      install_globally()
+      parser = CP.ConfigParser()
+      parser.loader = loader
+      parser.readfp(loader.load('config.ini'))
+      self.assertEqual(parser.get('DEFAULT', 'kw'), 'base-kw')
+      uninstall_globally()
+
+    do_first_test = do_second_test = do_the_test
+    do_first_test()
+    do_second_test()
+
 
 #------------------------------------------------------------------------------
 # end of $Id$
