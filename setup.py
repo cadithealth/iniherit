@@ -35,20 +35,22 @@ entrypoints = {
     ],
   }
 
+classifiers = [
+  'Development Status :: 5 - Production/Stable',
+  'Intended Audience :: Developers',
+  'Programming Language :: Python',
+  'Operating System :: OS Independent',
+  'Natural Language :: English',
+  'License :: OSI Approved :: MIT License',
+  'License :: Public Domain',
+  ]
+
 setup(
   name                  = 'iniherit',
   version               = '0.1.6',
   description           = 'A ConfigParser subclass with file-specified inheritance.',
   long_description      = read('README.rst'),
-  classifiers           = [
-    'Development Status :: 5 - Production/Stable',
-    'Intended Audience :: Developers',
-    'Programming Language :: Python',
-    'Operating System :: OS Independent',
-    'Natural Language :: English',
-    'License :: OSI Approved :: MIT License',
-    'License :: Public Domain',
-    ],
+  classifiers           = classifiers,
   author                = 'Philip J Grabner, Cadit Health Inc',
   author_email          = 'oss@cadit.com',
   url                   = 'http://github.com/cadithealth/iniherit',
