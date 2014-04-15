@@ -23,17 +23,18 @@ def read(*parts):
 test_requires = [
   'nose                 >= 1.2.1',
   'coverage             >= 3.5.3',
-  ]
+]
 
 requires = [
   'distribute           >= 0.6.24',
-  ]
+  'six                  >= 1.6.1',
+]
 
 entrypoints = {
   'console_scripts': [
     'iniherit           = iniherit.cli:main',
-    ],
-  }
+  ],
+}
 
 classifiers = [
   'Development Status :: 5 - Production/Stable',
@@ -43,7 +44,7 @@ classifiers = [
   'Natural Language :: English',
   'License :: OSI Approved :: MIT License',
   'License :: Public Domain',
-  ]
+]
 
 setup(
   name                  = 'iniherit',
@@ -63,7 +64,7 @@ setup(
   test_suite            = 'iniherit',
   entry_points          = entrypoints,
   license               = 'MIT (http://opensource.org/licenses/MIT)',
-  )
+)
 
 #------------------------------------------------------------------------------
 # end of $Id$
