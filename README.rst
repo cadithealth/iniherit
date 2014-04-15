@@ -20,18 +20,16 @@ Project Info
 TL;DR
 =====
 
-Given the following two files:
+Given the following two files, ``base.ini``:
 
 .. code-block:: ini
-
-  ## file "base.ini"
 
   [app:main]
   name = My Application Name
 
-.. code-block:: ini
+and ``config.ini``:
 
-  ## file "config.ini"
+.. code-block:: ini
 
   [DEFAULT]
   # the following will cause both "base.ini" and "override.ini" to be
