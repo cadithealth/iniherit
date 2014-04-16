@@ -19,6 +19,7 @@ from six.moves import urllib
 __all__ = (
   'Loader', 'IniheritMixin', 'RawConfigParser',
   'ConfigParser', 'SafeConfigParser',
+  'DEFAULT_INHERITTAG',
   )
 
 #------------------------------------------------------------------------------
