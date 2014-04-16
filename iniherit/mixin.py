@@ -8,12 +8,12 @@
 
 import six
 from six.moves import configparser as CP
-# TODO: what is the PY3 version of 'new'?...
-import new
 
-from iniherit.parser import IniheritMixin
+from .parser import IniheritMixin
 
 #------------------------------------------------------------------------------
+
+# todo: should this perhaps use the `stub` package instead?...
 
 attrs = [attr for attr in dir(IniheritMixin) if not attr.startswith('__')]
 
@@ -33,7 +33,11 @@ def install_globally():
               '_iniherit_' + attr, getattr(CP.RawConfigParser, attr))
     meth = getattr(IniheritMixin, attr)
     if six.callable(meth):
-      meth = new.instancemethod(meth.im_func, None, CP.RawConfigParser)
+      if six.PY2:
+        import new
+        meth = new.instancemethod(meth.__func__, None, CP.RawConfigParser)
+      else:
+        meth = meth.__get__(None, CP.RawConfigParser)
     setattr(CP.RawConfigParser, attr, meth)
 
 #------------------------------------------------------------------------------
