@@ -49,6 +49,7 @@ def flatten(input, output, loader=None):
   else:
     cfg.readfp(input)
   out = iniherit.parser.CP.RawConfigParser()
+  out.optionxform = str
   cfg._apply(cfg, out)
   if not isstr(output):
     out.write(output)
