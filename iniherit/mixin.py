@@ -6,13 +6,14 @@
 # copy: (C) Copyright 2013 Cadit Health Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
-try:
-  import ConfigParser as CP
-except ImportError:
-  import configparser as CP
+import six
+from six.moves import configparser as CP
 # TODO: what is the PY3 version of 'new'?...
 import new
+
 from iniherit.parser import IniheritMixin
+
+#------------------------------------------------------------------------------
 
 attrs = [attr for attr in dir(IniheritMixin) if not attr.startswith('__')]
 
@@ -31,7 +32,7 @@ def install_globally():
       setattr(CP.RawConfigParser,
               '_iniherit_' + attr, getattr(CP.RawConfigParser, attr))
     meth = getattr(IniheritMixin, attr)
-    if callable(meth):
+    if six.callable(meth):
       meth = new.instancemethod(meth.im_func, None, CP.RawConfigParser)
     setattr(CP.RawConfigParser, attr, meth)
 

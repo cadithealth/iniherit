@@ -6,7 +6,10 @@
 # copy: (C) Copyright 2013 Cadit Health Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
-import unittest, io
+import unittest
+import io
+import six
+
 from iniherit.parser import Loader, ConfigParser, SafeConfigParser
 
 #------------------------------------------------------------------------------
@@ -17,7 +20,7 @@ class ByteLoader(Loader):
   def load(self, name, encoding=None):
     if name not in self.items:
       raise IOError(2, 'No such file or directory', name)
-    ret = io.BytesIO(self.items[name])
+    ret = six.StringIO(self.items[name])
     ret.name = name
     return ret
 
@@ -132,7 +135,7 @@ kw6 = extend-kw6
   #----------------------------------------------------------------------------
   def test_iniherit_invalidInterpolationValues(self):
     files = [
-      ('config.ini',   '[logger]\ntimefmt=%H:%M:%S\n'),
+      ('config.ini', '[logger]\ntimefmt=%H:%M:%S\n'),
       ]
     parser = SafeConfigParser(loader=ByteLoader(dict(files)))
     parser.read('config.ini')
@@ -145,7 +148,7 @@ kw6 = extend-kw6
     from iniherit.mixin import install_globally, uninstall_globally
 
     files = [
-      ('base.ini', '[DEFAULT]\nkw = base-kw\n'),
+      ('base.ini',   '[DEFAULT]\nkw = base-kw\n'),
       ('config.ini', '[DEFAULT]\n%inherit = base.ini\n'),
       ]
     loader = ByteLoader(dict(files))

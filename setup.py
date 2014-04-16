@@ -25,7 +25,7 @@ test_requires = [
 ]
 
 requires = [
-  'distribute           >= 0.6.24',
+  'distribute           >= 0.7.3',
   'six                  >= 1.6.1',
 ]
 

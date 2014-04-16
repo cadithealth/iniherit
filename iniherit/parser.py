@@ -6,11 +6,11 @@
 # copy: (C) Copyright 2013 Cadit Health Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
-import io, os.path, urllib
-try:
-  import ConfigParser as CP
-except ImportError:
-  import configparser as CP
+import io
+import os.path
+import six
+from six.moves import configparser as CP
+from six.moves import urllib
 
 # TODO: PY3 added a `ConfigParser.read_dict` that should probably
 #       be overridden as well...
@@ -52,7 +52,7 @@ class IniheritMixin(object):
 
   #----------------------------------------------------------------------------
   def read(self, filenames, encoding=None):
-    if isinstance(filenames, basestring):
+    if isinstance(filenames, six.string_types):
       filenames = [filenames]
     read_ok = []
     for filename in filenames:
@@ -100,7 +100,7 @@ class IniheritMixin(object):
         optional = curname.startswith('?')
         if optional:
           curname = curname[1:]
-        curname = os.path.join(dirname, urllib.unquote(curname))
+        curname = os.path.join(dirname, urllib.parse.unquote(curname))
         try:
           curfp = self._load(curname, encoding=encoding)
         except IOError:
@@ -123,8 +123,8 @@ class IniheritMixin(object):
         fromsect = section
         if '[' in curname and curname.endswith(']'):
           curname, fromsect = curname.split('[', 1)
-          fromsect = urllib.unquote(fromsect[:-1])
-        curname = os.path.join(dirname, urllib.unquote(curname))
+          fromsect = urllib.parse.unquote(fromsect[:-1])
+        curname = os.path.join(dirname, urllib.parse.unquote(curname))
         try:
           curfp = self._load(curname, encoding=encoding)
         except IOError:

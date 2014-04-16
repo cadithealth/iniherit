@@ -7,6 +7,8 @@
 #------------------------------------------------------------------------------
 
 import sys, os, logging, time, argparse, gettext
+import six
+
 import iniherit, iniherit.parser
 
 log = logging.getLogger(__name__)
@@ -17,12 +19,8 @@ log = logging.getLogger(__name__)
 #       data... it should probably buffer it!
 
 #------------------------------------------------------------------------------
-if sys.version_info[0] == 3:
-  def isstr(obj):
-    return isinstance(obj, str)
-else:
-  def isstr(obj):
-    return isinstance(obj, basestring)
+def isstr(obj):
+  return isinstance(obj, six.string_types)
 
 #------------------------------------------------------------------------------
 def _(message, *args, **kw):
