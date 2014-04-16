@@ -133,6 +133,17 @@ kw6 = extend-kw6
                      sorted(dict(foo='bar', zig='zag', x='z').items()))
 
   #----------------------------------------------------------------------------
+  def test_iniherit_interpolation(self):
+    files = [
+      ('config.ini', '[app]\noutput = %(tmpdir)s/var/result.log\n'),
+      ]
+    parser = SafeConfigParser(
+      defaults={'tmpdir': '/tmp'}, loader=ByteLoader(dict(files)))
+    parser.read('config.ini')
+    self.assertEqual(parser.get('app', 'output'), '/tmp/var/result.log')
+    self.assertEqual(parser.get('app', 'output', raw=True), '%(tmpdir)s/var/result.log')
+
+  #----------------------------------------------------------------------------
   def test_iniherit_invalidInterpolationValues(self):
     files = [
       ('config.ini', '[logger]\ntimefmt=%H:%M:%S\n'),

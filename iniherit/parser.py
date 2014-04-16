@@ -154,7 +154,17 @@ class IniheritMixin(object):
         if src.has_option(self.IM_DEFAULTSECT, option) \
             and value == src.get(self.IM_DEFAULTSECT, option):
           continue
-        _real_RawConfigParser.set(dst, dstsect, option, value)
+        if six.PY3 and hasattr(dst, '_interpolation'):
+          # todo: don't do this for systems that have
+          #       http://bugs.python.org/issue21265 fixed
+          try:
+            tmp = dst._interpolation.before_set
+            dst._interpolation.before_set = lambda self,s,o,v,*a,**k: v
+            _real_RawConfigParser.set(dst, dstsect, option, value)
+          finally:
+            dst._interpolation.before_set = tmp
+        else:
+          _real_RawConfigParser.set(dst, dstsect, option, value)
 
 #------------------------------------------------------------------------------
 # todo: i'm a little worried about the diamond inheritance here...
