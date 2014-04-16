@@ -11,14 +11,13 @@ import os, sys, setuptools
 from setuptools import setup
 
 # require python 2.7+
-assert(sys.version_info[0] > 2
-       or sys.version_info[0] == 2
-       and sys.version_info[1] >= 7)
+if sys.hexversion < 0x02070000:
+  raise RuntimeError('This package requires python 2.7 or better')
 
-here = os.path.abspath(os.path.dirname(__file__))
-def read(*parts):
-  try:    return open(os.path.join(here, *parts)).read()
-  except: return ''
+heredir = os.path.abspath(os.path.dirname(__file__))
+def read(*parts, **kw):
+  try:    return open(os.path.join(heredir, *parts)).read()
+  except: return kw.get('default', '')
 
 test_requires = [
   'nose                 >= 1.2.1',
@@ -48,7 +47,7 @@ classifiers = [
 
 setup(
   name                  = 'iniherit',
-  version               = '0.1.7',
+  version               = read('VERSION.txt', default='0.0.1').strip(),
   description           = 'A ConfigParser subclass with file-specified inheritance.',
   long_description      = read('README.rst'),
   classifiers           = classifiers,
