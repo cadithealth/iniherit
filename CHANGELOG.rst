@@ -3,10 +3,11 @@ ChangeLog
 =========
 
 
-v0.3.0
+v0.3.1
 ======
 
 * Corrected egg packaging to include .txt and .rst files
+* Corrected `distribute` dependency for py2 vs. py3
 
 
 v0.2.0
