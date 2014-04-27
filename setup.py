@@ -25,7 +25,7 @@ test_requires = [
 ]
 
 requires = [
-  'distribute           >= 0.7.3',
+  'distribute           >= ' + ( '0.7.3' if sys.hexversion > 0x03000000 else '0.6.24' ),
   'six                  >= 1.6.1',
 ]
 
