@@ -84,6 +84,10 @@ follows:
 
 .. code-block:: bash
 
+  # if using python 3+, upgrade your `distribute` package *first*
+  $ pip install "distribute>=0.7.3"
+
+  # then istall with pip:
   $ pip install iniherit
 
 
