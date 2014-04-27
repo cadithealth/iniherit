@@ -3,6 +3,12 @@ ChangeLog
 =========
 
 
+v0.3.0
+======
+
+* Corrected egg packaging to include .txt and .rst files
+
+
 v0.2.0
 ======
 
