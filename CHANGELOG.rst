@@ -3,6 +3,12 @@ ChangeLog
 =========
 
 
+v0.3.3
+======
+
+* Preserved order of sections during application of inherited sections
+
+
 v0.3.2
 ======
 
