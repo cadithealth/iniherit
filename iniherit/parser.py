@@ -11,6 +11,10 @@ import os.path
 import six
 from six.moves import configparser as CP
 from six.moves import urllib
+try:
+  from collections import OrderedDict
+except ImportError:
+  OrderedDict = dict
 
 # TODO: PY3 added a `ConfigParser.read_dict` that should probably
 #       be overridden as well...
@@ -20,7 +24,7 @@ __all__ = (
   'Loader', 'IniheritMixin', 'RawConfigParser',
   'ConfigParser', 'SafeConfigParser',
   'DEFAULT_INHERITTAG',
-  )
+)
 
 #------------------------------------------------------------------------------
 class Loader(object):
@@ -146,7 +150,7 @@ class IniheritMixin(object):
       for option, value in src.items(self.IM_DEFAULTSECT):
         _real_RawConfigParser.set(dst, self.IM_DEFAULTSECT, option, value)
     if sections is None:
-      sections = {s: s for s in src.sections()}
+      sections = OrderedDict([(s, s) for s in src.sections()])
     for srcsect, dstsect in sections.items():
       if not dst.has_section(dstsect):
         dst.add_section(dstsect)

@@ -43,7 +43,7 @@ test2 = the value "%(kw2)s" should be "base-kw2"
 %inherit = base.ini
 kw1 = extend-kw1
 '''),
-      ]
+    ]
     parser = ConfigParser(loader=ByteLoader(dict(files)))
     parser.read('extend.ini')
     self.assertEqual(parser.get('DEFAULT', 'kw1'), 'extend-kw1')
@@ -77,7 +77,7 @@ kw1 = extend-kw1
 kw3 = extend-kw3
 kw6 = extend-kw6
 '''),
-      ]
+    ]
     parser = ConfigParser(loader=ByteLoader(dict(files)))
     parser.read('extend.ini')
     self.assertEqual(parser.get('DEFAULT', 'kw1'), 'extend-kw1')
@@ -92,7 +92,7 @@ kw6 = extend-kw6
     files = [
       ('base.ini',   '[DEFAULT]\nkw1 = base-kw1\n'),
       ('extend.ini', '[DEFAULT]\n%inherit = base.ini no-such-ini.ini\nkw2 = extend-kw2\n'),
-      ]
+    ]
     parser = ConfigParser(loader=ByteLoader(dict(files)))
     self.assertRaises(IOError, parser.read, 'extend.ini')
 
@@ -102,7 +102,7 @@ kw6 = extend-kw6
       ('dir/base.ini', '[section]\nkw1 = base-kw1\n'),
       ('dir/mid.ini',  '[DEFAULT]\n%inherit = base.ini\n[section]\nkw2 = mid-kw2\n'),
       ('extend.ini',   '[DEFAULT]\n%inherit = dir/mid.ini\n[section]\nkw3 = extend-kw3\n'),
-      ]
+    ]
     parser = ConfigParser(loader=ByteLoader(dict(files)))
     parser.read('extend.ini')
     self.assertEqual(parser.get('section', 'kw1'), 'base-kw1')
@@ -114,7 +114,7 @@ kw6 = extend-kw6
     files = [
       ('base + space.ini', '[DEFAULT]\nkw=word\n'),
       ('config.ini',       '[DEFAULT]\n%inherit = base%20%2b%20space.ini\n'),
-      ]
+    ]
     parser = ConfigParser(loader=ByteLoader(dict(files)))
     parser.read('config.ini')
     self.assertEqual(parser.get('DEFAULT', 'kw'), 'word')
@@ -125,7 +125,7 @@ kw6 = extend-kw6
       ('base.ini',   '[DEFAULT]\nkw1=word\n[s]\nfoo=bar\nx=y\n'),
       ('other.ini',  '[DEFAULT]\nkw2=word\n[so]\nzig=zag\n'),
       ('config.ini', '[s]\n%inherit = base.ini other.ini[so]\nx=z\n'),
-      ]
+    ]
     parser = ConfigParser(loader=ByteLoader(dict(files)))
     parser.read('config.ini')
     self.assertEqual(parser.items('DEFAULT'), [])
@@ -136,7 +136,7 @@ kw6 = extend-kw6
   def test_iniherit_interpolation(self):
     files = [
       ('config.ini', '[app]\noutput = %(tmpdir)s/var/result.log\n'),
-      ]
+    ]
     parser = SafeConfigParser(
       defaults={'tmpdir': '/tmp'}, loader=ByteLoader(dict(files)))
     parser.read('config.ini')
@@ -147,7 +147,7 @@ kw6 = extend-kw6
   def test_iniherit_invalidInterpolationValues(self):
     files = [
       ('config.ini', '[logger]\ntimefmt=%H:%M:%S\n'),
-      ]
+    ]
     parser = SafeConfigParser(loader=ByteLoader(dict(files)))
     parser.read('config.ini')
     self.assertEqual(parser.items('DEFAULT'), [])
@@ -161,7 +161,7 @@ kw6 = extend-kw6
     files = [
       ('base.ini',   '[DEFAULT]\nkw = base-kw\n'),
       ('config.ini', '[DEFAULT]\n%inherit = base.ini\n'),
-      ]
+    ]
     loader = ByteLoader(dict(files))
 
     def do_the_test():
@@ -183,6 +183,33 @@ kw6 = extend-kw6
     do_first_test()
     do_second_test()
 
+  #----------------------------------------------------------------------------
+  def test_output_order_ascending(self):
+    files = [
+      ('base.ini', '[s1]\ns1v = b1\n[s2]\ns2v = b2\n[s3]\ns3v = b3\n'),
+      ('extend.ini', '[DEFAULT]\n%inherit = base.ini\n[s2]\ns2v = o2'),
+    ]
+    parser = ConfigParser(loader=ByteLoader(dict(files)))
+    parser.read('extend.ini')
+    output = six.StringIO()
+    parser.write(output)
+    self.assertMultiLineEqual(
+      output.getvalue(),
+      '[s1]\ns1v = b1\n\n[s2]\ns2v = o2\n\n[s3]\ns3v = b3\n\n')
+
+  #----------------------------------------------------------------------------
+  def test_output_order_descending(self):
+    files = [
+      ('base.ini', '[s3]\ns3v = b3\n[s2]\ns2v = b2\n[s1]\ns1v = b1\n'),
+      ('extend.ini', '[DEFAULT]\n%inherit = base.ini\n[s2]\ns2v = o2'),
+    ]
+    parser = ConfigParser(loader=ByteLoader(dict(files)))
+    parser.read('extend.ini')
+    output = six.StringIO()
+    parser.write(output)
+    self.assertMultiLineEqual(
+      output.getvalue(),
+      '[s3]\ns3v = b3\n\n[s2]\ns2v = o2\n\n[s1]\ns1v = b1\n\n')
 
 #------------------------------------------------------------------------------
 # end of $Id$
