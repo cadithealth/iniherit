@@ -20,12 +20,11 @@ def read(*parts, **kw):
   except: return kw.get('default', '')
 
 test_requires = [
-  'nose                 >= 1.2.1',
+  'nose                 >= 1.3.0',
   'coverage             >= 3.5.3',
 ]
 
 requires = [
-  'distribute           >= ' + ( '0.7.3' if sys.hexversion > 0x03000000 else '0.6.24' ),
   'six                  >= 1.6.1',
 ]
 
