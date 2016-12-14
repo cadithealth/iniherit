@@ -103,12 +103,12 @@ class IniheritMixin(object):
   #----------------------------------------------------------------------------
   def _readRecursive(self, fp, fpname, encoding=None):
     ret = self._makeParser()
-    ret.readfp(fp, fpname)
+    src = self._makeParser()
+    src.readfp(fp, fpname)
     dirname = os.path.dirname(fpname)
-    if ret.has_option(self.IM_DEFAULTSECT, self.IM_INHERITTAG):
-      inilist = ret.get(self.IM_DEFAULTSECT, self.IM_INHERITTAG)
-      ret.remove_option(self.IM_DEFAULTSECT, self.IM_INHERITTAG)
-      tmp = self._makeParser()
+    if src.has_option(self.IM_DEFAULTSECT, self.IM_INHERITTAG):
+      inilist = src.get(self.IM_DEFAULTSECT, self.IM_INHERITTAG)
+      src.remove_option(self.IM_DEFAULTSECT, self.IM_INHERITTAG)
       for curname in inilist.split():
         optional = curname.startswith('?')
         if optional:
@@ -120,15 +120,12 @@ class IniheritMixin(object):
           if optional:
             continue
           raise
-        self._apply(self._readRecursive(curfp, curname, encoding=encoding), tmp)
-      self._apply(ret, tmp)
-      ret = tmp
-    for section in ret.sections():
-      if not ret.has_option(section, self.IM_INHERITTAG):
+        self._apply(self._readRecursive(curfp, curname, encoding=encoding), ret)
+    for section in src.sections():
+      if not src.has_option(section, self.IM_INHERITTAG):
         continue
-      inilist = ret.get(section, self.IM_INHERITTAG)
-      ret.remove_option(section, self.IM_INHERITTAG)
-      retorig = dict(ret.items(section))
+      inilist = src.get(section, self.IM_INHERITTAG)
+      src.remove_option(section, self.IM_INHERITTAG)
       for curname in inilist.split():
         optional = curname.startswith('?')
         if optional:
@@ -146,8 +143,7 @@ class IniheritMixin(object):
           raise
         self._apply(self._readRecursive(curfp, curname, encoding=encoding), ret,
                     sections={fromsect: section})
-      for k, v in retorig.items():
-        _real_RawConfigParser.set(ret, section, k, v)
+    self._apply(src, ret)
     return ret
 
   #----------------------------------------------------------------------------
@@ -156,37 +152,50 @@ class IniheritMixin(object):
     #       the default section with the exact same value... ugh.
     if sections is None:
       for option, value in src.items(self.IM_DEFAULTSECT):
-        _real_RawConfigParser.set(dst, self.IM_DEFAULTSECT, option, value)
+        value = interpolation.interpolate_super(
+          self, src, dst, self.IM_DEFAULTSECT, option, value)
+        self._im_setraw(dst, self.IM_DEFAULTSECT, option, value)
     if sections is None:
       sections = OrderedDict([(s, s) for s in src.sections()])
     for srcsect, dstsect in sections.items():
       if not dst.has_section(dstsect):
         dst.add_section(dstsect)
       for option, value in src.items(srcsect):
+        # todo: this is a *terrible* way of detecting if this option is
+        #       defaulting...
         if src.has_option(self.IM_DEFAULTSECT, option) \
             and value == src.get(self.IM_DEFAULTSECT, option):
           continue
-        if six.PY3 and hasattr(dst, '_interpolation'):
-          # todo: don't do this for systems that have
-          #       http://bugs.python.org/issue21265 fixed
-          try:
-            tmp = dst._interpolation.before_set
-            dst._interpolation.before_set = lambda self,s,o,v,*a,**k: v
-            _real_RawConfigParser.set(dst, dstsect, option, value)
-          finally:
-            dst._interpolation.before_set = tmp
-        else:
-          _real_RawConfigParser.set(dst, dstsect, option, value)
+        value = interpolation.interpolate_super(
+          self, src, dst, dstsect, option, value)
+        self._im_setraw(dst, dstsect, option, value)
+
+  #----------------------------------------------------------------------------
+  def _im_setraw(self, parser, section, option, value):
+    if six.PY3 and hasattr(dst, '_interpolation'):
+      # todo: don't do this for systems that have
+      #       http://bugs.python.org/issue21265 fixed
+      try:
+        tmp = parser._interpolation.before_set
+        parser._interpolation.before_set = lambda self,s,o,v,*a,**k: v
+        _real_RawConfigParser.set(parser, section, option, value)
+      finally:
+        parser._interpolation.before_set = tmp
+    else:
+      _real_RawConfigParser.set(parser, section, option, value)
 
   #----------------------------------------------------------------------------
   # todo: yikes! overriding a private method!...
   def _interpolate(self, section, option, rawval, vars):
+    base_interpolate = getattr(_real_ConfigParser, '_iniherit__interpolate', None)
+    if not base_interpolate:
+      base_interpolate = getattr(_real_ConfigParser, '_interpolate', None)
     return interpolation.interpolate(
-      self, _real_ConfigParser._interpolate, section, option, rawval, vars)
+      self, base_interpolate, section, option, rawval, vars)
   if not hasattr(_real_ConfigParser, '_interpolate'):
     warnings.warn(
-      'ConfigParser did not have a "_interpolate" method...'
-      ' iniherit may be broken on this platform',
+      'ConfigParser did not have a "_interpolate" method'
+      ' -- iniherit may be broken on this platform',
       RuntimeWarning)
 
 

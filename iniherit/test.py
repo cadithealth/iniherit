@@ -214,6 +214,104 @@ class TestIniherit(unittest.TestCase):
       '[s3]\ns3v = b3\n\n[s2]\ns2v = o2\n\n[s1]\ns1v = b1\n\n')
 
   #----------------------------------------------------------------------------
+  def test_interpolation_super_depth(self):
+    files = {k: textwrap.dedent(v) for k, v in {
+      'base.ini' : '''\
+        [DEFAULT]
+        keys2 = base-vals
+        # [loggers]
+        # keys = root, authz
+        # okeys = okeys-bVal
+      ''',
+      'mid.ini' : '''\
+        [DEFAULT]
+        %inherit = base.ini ?no-such-ini.ini
+        # key1 = val1
+      ''',
+      'extend.ini' : '''\
+        [DEFAULT]
+        %inherit = mid.ini
+        # nkeys = %(SUPER:-nval0)s, eVal1
+        keys2 = %(SUPER:-nval0)s, eVal1
+        # [loggers]
+        # keys = %(SUPER)s, authn
+        # okeys = %(SUPER:-okeys-eDef)s, okeys-eVal
+        # dkeys = %(SUPER:-dkeys-eDef)s, dkeys-eVal
+      ''',
+    }.items()}
+    parser = ConfigParser(loader=ByteLoader(files))
+    parser.read('extend.ini')
+
+    # self.assertEqual(parser.get('loggers', 'keys'), 'root, authz, authn')
+    # self.assertEqual(parser.get('loggers', 'okeys'), 'okeys-bVal, okeys-eVal')
+    # self.assertEqual(parser.get('loggers', 'dkeys'), 'dkeys-eDef, dkeys-eVal')
+
+    self.assertEqual(parser.get('DEFAULT', 'keys2'), 'base-vals, eVal1')
+
+    # self.assertEqual(parser.get('DEFAULT', 'nkeys'), 'nval0, eVal1')
+    # self.assertEqual(parser.get('DEFAULT', 'key1'), 'val1')
+
+  #----------------------------------------------------------------------------
+  def test_interpolation_super_breadth(self):
+    from iniherit import InterpolationMissingSuperError
+    files = {k: textwrap.dedent(v) for k, v in {
+      'base.ini' : '''\
+        [loggers]
+        keys = root, authz
+      ''',
+      'adjust.ini' : '''\
+        [loggers]
+        keys = %(SUPER)s, authn
+        nkey = %(SUPER)s and boom!
+        dkey = %(SUPER:-more)s or less
+      ''',
+      'extend.ini' : '''\
+        [DEFAULT]
+        %inherit = base.ini adjust.ini
+      ''',
+    }.items()}
+    parser = ConfigParser(loader=ByteLoader(files))
+    parser.read('extend.ini')
+    self.assertEqual(parser.get('loggers', 'keys'), 'root, authz, authn')
+    self.assertEqual(parser.get('loggers', 'dkey'), 'more or less')
+    with self.assertRaises(InterpolationMissingSuperError) as cm:
+      parser.get('loggers', 'nkey')
+    self.assertMultiLineEqual(str(cm.exception), textwrap.dedent('''\
+      Bad value substitution:
+      \tsection: [loggers]
+      \toption : nkey
+      \tkey    : SUPER
+      \trawval : %(SUPER)s and boom!
+    '''))
+
+  #----------------------------------------------------------------------------
+  def test_interpolation_super_invalid(self):
+    from iniherit import InterpolationMissingSuperError
+    files = {k: textwrap.dedent(v) for k, v in {
+      'base.ini' : '''\
+        [DEFAULT]
+        key1 = val1
+      ''',
+      'extend.ini' : '''\
+        [DEFAULT]
+        %inherit = base.ini
+        key2 = %(SUPER)s and boom!
+      ''',
+    }.items()}
+    files = {k: textwrap.dedent(v) for k, v in files.items()}
+    parser = ConfigParser(loader=ByteLoader(files))
+    parser.read('extend.ini')
+    with self.assertRaises(InterpolationMissingSuperError) as cm:
+      parser.get('DEFAULT', 'key2')
+    self.assertMultiLineEqual(str(cm.exception), textwrap.dedent('''\
+      Bad value substitution:
+      \tsection: [DEFAULT]
+      \toption : key2
+      \tkey    : SUPER
+      \trawval : %(SUPER)s and boom!
+    '''))
+
+  #----------------------------------------------------------------------------
   def test_interpolation_env(self):
     import os
     from six.moves.configparser import InterpolationDepthError

@@ -15,7 +15,8 @@ from .parser import IniheritMixin
 
 # todo: should this perhaps use the `stub` package instead?...
 
-attrs = [attr for attr in dir(IniheritMixin) if not attr.startswith('__')]
+raw_attrs = [attr for attr in dir(IniheritMixin) if not attr.startswith('__')]
+base_attrs = ['_interpolate']
 
 #------------------------------------------------------------------------------
 def install_globally():
@@ -27,34 +28,43 @@ def install_globally():
   if hasattr(CP.RawConfigParser, '_iniherit_installed_'):
     return
   setattr(CP.RawConfigParser, '_iniherit_installed_', True)
-  for attr in attrs:
-    if hasattr(CP.RawConfigParser, attr):
-      setattr(CP.RawConfigParser,
-              '_iniherit_' + attr, getattr(CP.RawConfigParser, attr))
-    meth = getattr(IniheritMixin, attr)
-    if six.callable(meth):
-      if six.PY2:
-        import new
-        meth = new.instancemethod(meth.__func__, None, CP.RawConfigParser)
-      else:
-        meth = meth.__get__(None, CP.RawConfigParser)
-    setattr(CP.RawConfigParser, attr, meth)
+  for target, attrs in (
+      (CP.RawConfigParser, raw_attrs),
+      (CP.ConfigParser, base_attrs),
+    ):
+    for attr in attrs:
+      if hasattr(target, attr):
+        setattr(target,
+                '_iniherit_' + attr, getattr(target, attr))
+      meth = getattr(IniheritMixin, attr)
+      if six.callable(meth):
+        if six.PY2:
+          import new
+          meth = new.instancemethod(meth.__func__, None, target)
+        else:
+          meth = meth.__get__(None, target)
+      setattr(target, attr, meth)
 
 #------------------------------------------------------------------------------
 def uninstall_globally():
   '''
   Reverts the effects of :func:`install_globally`.
   '''
-  if not hasattr(CP.ConfigParser, '_iniherit_installed_'):
+  if not hasattr(CP.RawConfigParser, '_iniherit_installed_'):
     return
   delattr(CP.RawConfigParser, '_iniherit_installed_')
-  for attr in attrs:
-    if hasattr(CP.RawConfigParser, '_iniherit_' + attr):
-      xattr = getattr(CP.RawConfigParser, '_iniherit_' + attr)
-      setattr(CP.RawConfigParser, attr, xattr)
-    else:
-      delattr(CP.RawConfigParser, attr)
+  for target, attrs in (
+      (CP.RawConfigParser, raw_attrs),
+      (CP.ConfigParser, base_attrs),
+    ):
+    for attr in attrs:
+      if hasattr(target, '_iniherit_' + attr):
+        xattr = getattr(target, '_iniherit_' + attr)
+        setattr(target, attr, xattr)
+      else:
+        delattr(target, attr)
 
 #------------------------------------------------------------------------------
 # end of $Id$
+# $ChangeLog$
 #------------------------------------------------------------------------------

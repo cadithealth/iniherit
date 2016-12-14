@@ -8,7 +8,7 @@
 
 from .parser import *
 from . import mixin
-from .interpolation import InterpolationMissingEnvError
+from .interpolation import InterpolationMissingEnvError, InterpolationMissingSuperError
 
 #------------------------------------------------------------------------------
 # end of $Id$
