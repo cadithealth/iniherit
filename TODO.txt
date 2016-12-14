@@ -7,3 +7,11 @@
 
 * Implement `write`... this could be done by tracking which config
   items are "dirty", and only saving those to the base INI...
+
+* Allow ENV and SUPER default values to have special characters, e.g.:
+
+    %(ENV:VARNAME:-%(defval)s)s
+
+  or
+
+    %(ENV:VARNAME:-%(defval\)s)s
