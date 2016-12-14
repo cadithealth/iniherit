@@ -3,6 +3,14 @@ ChangeLog
 =========
 
 
+v0.3.5
+======
+
+* Added support for ``%(SUPER)s`` inherited value expansion
+* Added support for ``%(ENV:VARNAME)s`` environment variable value
+  expansion
+
+
 v0.3.4
 ======
 
