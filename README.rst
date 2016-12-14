@@ -10,7 +10,9 @@ inheritance themselves, then the `iniherit` package is a better
 alternative.
 
 Oh, `iniherit` also adds support for environment variable expansion
-via ``%(ENV:VARNAME)s``.
+via ``%(ENV:VARNAME)s``. This really shouldn't be here, but since
+`iniherit` supports the ``%(SUPER)s`` expansion, it was "just too
+easy" to add envvar expansion as well...
 
 
 Project Info
@@ -170,6 +172,54 @@ Substitutions
 The `iniherit` package adds the following additional substitution
 options:
 
+* ``%(SUPER[:-DEFAULT])s``
+
+  Evaluates to the inherited value of the current section/key value.
+  If the inherited INI does not specify a value and no default is
+  provided, then an `InterpolationMissingSuperError` is raised. The
+  "inherited value" is evaluated depth-first. Note that "SUPER" must
+  be all upper case.
+
+  For example, given the following INI files:
+
+  .. code:: ini
+
+    # base.ini
+    [loggers]
+    keys = root, app
+
+
+  .. code:: ini
+
+    # config.ini
+    [DEFAULT]
+    %inherit = base.ini
+    [loggers]
+    keys = %(SUPER)s, auth
+    wdef = %(SUPER:-more)s or less
+    nada = %(SUPER)s boom!
+
+
+  Then the following Python will result:
+
+  .. code:: python
+
+    import iniherit
+    iniherit.mixin.install_globally()
+    import ConfigParser
+    cfg = ConfigParser.SafeConfigParser()
+    cfg.read('config.ini')
+
+    cfg.get('loggers', 'keys')  # ==> 'root, app, auth'
+    cfg.get('loggers', 'wdef')  # ==> 'more or less'
+    cfg.get('loggers', 'nada')  # ==> raises InterpolationMissingSuperError
+
+
+  As with standard interpolation errors, the
+  InterpolationMissingSuperError exception is only raised if/when the
+  value is requested from the config (with `raw` set to falsy).
+
+
 * ``%(ENV:VARNAME[:-DEFAULT])s``
 
   Evaluates to the value of the environment variable name "VARNAME".
@@ -186,6 +236,7 @@ options:
     home = %(ENV:HOME)s
     rdir = %(ENV:RDIR:-/var/run)s
     nada = %(ENV:RDIR)s
+
 
   Then the following Python will result:
 
@@ -204,6 +255,11 @@ options:
     cfg.get('section', 'home')  # ==> '/home/user'
     cfg.get('section', 'rdir')  # ==> '/var/run'
     cfg.get('section', 'nada')  # ==> raises InterpolationMissingEnvError
+
+
+  As with standard interpolation errors, the
+  InterpolationMissingEnvError exception is only raised if/when the
+  value is requested from the config (with `raw` set to falsy).
 
 
 Gotchas
