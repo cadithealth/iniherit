@@ -27,17 +27,21 @@ __all__ = (
 )
 
 #------------------------------------------------------------------------------
-class Loader(object):
-  def load(self, name, encoding=None):
-    if encoding is None:
-      return open(name)
-    return open(name, encoding=encoding)
 
 _real_RawConfigParser  = CP.RawConfigParser
 _real_ConfigParser     = CP.ConfigParser
 _real_SafeConfigParser = CP.SafeConfigParser
 
 DEFAULT_INHERITTAG = '%inherit'
+
+#------------------------------------------------------------------------------
+class Loader(object):
+  def load(self, name, encoding=None):
+    # todo: these fp are leaked... need to use "contextlib.closing" somehow...
+    if encoding is None:
+      return open(name)
+    return open(name, encoding=encoding)
+
 
 #------------------------------------------------------------------------------
 # TODO: this would probably be *much* simpler with meta-classes...
@@ -188,6 +192,8 @@ class SafeConfigParser(ConfigParser, _real_SafeConfigParser):
     ConfigParser.__init__(self, loader=loader)
     _real_SafeConfigParser.__init__(self, *args, **kw)
 
+
 #------------------------------------------------------------------------------
 # end of $Id$
+# $ChangeLog$
 #------------------------------------------------------------------------------

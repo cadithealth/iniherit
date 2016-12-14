@@ -8,7 +8,9 @@
 
 from .parser import *
 from . import mixin
+from .interpolation import InterpolationMissingEnvError
 
 #------------------------------------------------------------------------------
 # end of $Id$
+# $ChangeLog$
 #------------------------------------------------------------------------------
