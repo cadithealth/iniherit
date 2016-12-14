@@ -8,6 +8,8 @@
 
 import io
 import os.path
+import warnings
+
 import six
 from six.moves import configparser as CP
 from six.moves import urllib
@@ -19,6 +21,8 @@ except ImportError:
 # TODO: PY3 added a `ConfigParser.read_dict` that should probably
 #       be overridden as well...
 # TODO: should `ConfigParser.set()` be checked for option==INHERITTAG?...
+
+from . import interpolation
 
 __all__ = (
   'Loader', 'IniheritMixin', 'RawConfigParser',
@@ -173,6 +177,18 @@ class IniheritMixin(object):
             dst._interpolation.before_set = tmp
         else:
           _real_RawConfigParser.set(dst, dstsect, option, value)
+
+  #----------------------------------------------------------------------------
+  # todo: yikes! overriding a private method!...
+  def _interpolate(self, section, option, rawval, vars):
+    return interpolation.interpolate(
+      self, _real_ConfigParser._interpolate, section, option, rawval, vars)
+  if not hasattr(_real_ConfigParser, '_interpolate'):
+    warnings.warn(
+      'ConfigParser did not have a "_interpolate" method...'
+      ' iniherit may be broken on this platform',
+      RuntimeWarning)
+
 
 #------------------------------------------------------------------------------
 # todo: i'm a little worried about the diamond inheritance here...

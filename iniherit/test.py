@@ -213,6 +213,51 @@ class TestIniherit(unittest.TestCase):
       output.getvalue(),
       '[s3]\ns3v = b3\n\n[s2]\ns2v = o2\n\n[s1]\ns1v = b1\n\n')
 
+  #----------------------------------------------------------------------------
+  def test_interpolation_env(self):
+    import os
+    from six.moves.configparser import InterpolationDepthError
+    from iniherit import InterpolationMissingEnvError
+    files = {k: textwrap.dedent(v) for k, v in {
+      'config.ini' : '''\
+        [section]
+        key1 = %(ENV:INIHERIT_TEST_EXIST)s
+        key2 = %(ENV:INIHERIT_TEST_EXIST:-default-value)s
+        key3 = %(ENV:INIHERIT_TEST_NOEXIST)s
+        key4 = %(ENV:INIHERIT_TEST_NOEXIST:-default-value)s
+        key5 = %(ENV:INIHERIT_TEST_INFLOOP)s
+      ''',
+    }.items()}
+    files = {k: textwrap.dedent(v) for k, v in files.items()}
+    parser = ConfigParser(loader=ByteLoader(files))
+    parser.read('config.ini')
+    # note: setting envvar's *after* reading to ensure that interpolation
+    #       occurs on-demand, i.e. lazy-eval
+    os.environ.pop('INIHERIT_TEST_NOEXIST', None)
+    os.environ['INIHERIT_TEST_EXIST']   = 'this-value'
+    os.environ['INIHERIT_TEST_INFLOOP'] = '%(ENV:INIHERIT_TEST_INFLOOP)s'
+    self.assertEqual(parser.get('section', 'key1'), 'this-value')
+    self.assertEqual(parser.get('section', 'key2'), 'this-value')
+    self.assertEqual(parser.get('section', 'key4'), 'default-value')
+    with self.assertRaises(InterpolationMissingEnvError) as cm:
+      parser.get('section', 'key3')
+    self.assertMultiLineEqual(str(cm.exception), textwrap.dedent('''\
+      Bad value substitution:
+      \tsection: [section]
+      \toption : key3
+      \tkey    : INIHERIT_TEST_NOEXIST
+      \trawval : %(ENV:INIHERIT_TEST_NOEXIST)s
+    '''))
+    with self.assertRaises(InterpolationDepthError) as cm:
+      parser.get('section', 'key5')
+    self.assertMultiLineEqual(str(cm.exception), textwrap.dedent('''\
+      Value interpolation too deeply recursive:
+      \tsection: [section]
+      \toption : key5
+      \trawval : %(ENV:INIHERIT_TEST_INFLOOP)s
+    '''))
+
+
 #------------------------------------------------------------------------------
 # end of $Id$
 # $ChangeLog$
