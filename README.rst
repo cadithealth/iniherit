@@ -6,8 +6,11 @@ Adds INI-file inheritance to ConfigParser. Note that although it
 effectively behaves very similarly to passing multiple files to
 ConfigParser's `read()` method, that requires changing the code at
 that point. If that is not feasible, or the INI files should dictate
-inheritance themselves, then the iniherit package is a better
+inheritance themselves, then the `iniherit` package is a better
 alternative.
+
+Oh, `iniherit` also adds support for environment variable expansion
+via ``%(ENV:VARNAME)s``.
 
 
 Project Info
@@ -22,14 +25,14 @@ TL;DR
 
 Given the following two files, ``base.ini``:
 
-.. code-block:: ini
+.. code:: ini
 
   [app:main]
   name = My Application Name
 
 and ``config.ini``:
 
-.. code-block:: ini
+.. code:: ini
 
   [DEFAULT]
   # the following will cause both "base.ini" and "override.ini" to be
@@ -39,7 +42,7 @@ and ``config.ini``:
 
 Then the following code will pass the assert:
 
-.. code-block:: python
+.. code:: python
 
   import iniherit
   cfg = iniherit.SafeConfigParser()
@@ -50,7 +53,7 @@ Then the following code will pass the assert:
 Alternatively, the global ConfigParser can be altered to
 support inheritance:
 
-.. code-block:: python
+.. code:: python
 
   import iniherit
   iniherit.mixin.install_globally()
@@ -68,7 +71,7 @@ an effect.
 The command-line program `iniherit` allows flattening of INI files
 (i.e. collapsing all inheritance rules), optionally in "watch" mode:
 
-.. code-block:: bash
+.. code:: bash
 
   $ iniherit --watch --interval 2 --verbose input.ini output.ini
   INFO:iniherit.cli:"source.ini" changed; updating output...
@@ -82,7 +85,7 @@ Installation
 Install iniherit via your favorite PyPI package manager works as
 follows:
 
-.. code-block:: bash
+.. code:: bash
 
   # if using python 3+, upgrade your `distribute` package *first*
   $ pip install "distribute>=0.7.3"
@@ -100,7 +103,7 @@ INI file inheritance with the `iniherit` package:
   "DEFAULT" section of the INI file to inherit all sections of the
   specified files. Example:
 
-  .. code-block:: ini
+  .. code:: ini
 
     [DEFAULT]
     %inherit  = base.ini
@@ -117,7 +120,7 @@ INI file inheritance with the `iniherit` package:
   list of files to inherit values from, whose values are loaded
   depth-first, left-to-right. For example:
 
-  .. code-block:: ini
+  .. code:: ini
 
     [DEFAULT]
     %inherit = base.ini file-with%20space.ini
@@ -128,7 +131,7 @@ INI file inheritance with the `iniherit` package:
   is suffixed with square-bracket enclosed ("[" ... "]"), URL-encoded,
   section name. Example:
 
-  .. code-block:: ini
+  .. code:: ini
 
     [section]
     %inherit = base.ini override.ini[other%20section]
@@ -159,6 +162,48 @@ INI file inheritance with the `iniherit` package:
 * Note that the actual name of the inherit option can be changed by
   changing either ``iniherit.parser.DEFAULT_INHERITTAG`` for a global
   effect, or ``ConfigParser.IM_INHERITTAG`` for a per-instance effect.
+
+
+Substitutions
+=============
+
+The `iniherit` package adds the following additional substitution
+options:
+
+* ``%(ENV:VARNAME[:-DEFAULT])s``
+
+  Evaluates to the value of the environment variable name "VARNAME".
+  If the environment variable is not defined and no default is
+  provided, then an `InterpolationMissingEnvError` is raised. Note
+  that environment variable names are always case sensitive.
+
+  For example, given the following INI file:
+
+  .. code:: ini
+
+    # config.ini
+    [section]
+    home = %(ENV:HOME)s
+    rdir = %(ENV:RDIR:-/var/run)s
+    nada = %(ENV:RDIR)s
+
+  Then the following Python will result:
+
+  .. code:: python
+
+    import iniherit
+    iniherit.mixin.install_globally()
+    import ConfigParser
+    cfg = ConfigParser.SafeConfigParser()
+    cfg.read('config.ini')
+
+    import os
+    os.environ['home'] = '/home/user'  # ensure "HOME" envvar exists
+    os.environ.pop('RDIR', None)       # ensure "RDIR" envvar does NOT exist
+
+    cfg.get('section', 'home')  # ==> '/home/user'
+    cfg.get('section', 'rdir')  # ==> '/var/run'
+    cfg.get('section', 'nada')  # ==> raises InterpolationMissingEnvError
 
 
 Gotchas
