@@ -172,7 +172,7 @@ class IniheritMixin(object):
 
   #----------------------------------------------------------------------------
   def _im_setraw(self, parser, section, option, value):
-    if six.PY3 and hasattr(dst, '_interpolation'):
+    if six.PY3 and hasattr(parser, '_interpolation'):
       # todo: don't do this for systems that have
       #       http://bugs.python.org/issue21265 fixed
       try:
