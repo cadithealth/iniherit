@@ -29,6 +29,8 @@ class ByteLoader(Loader):
 #------------------------------------------------------------------------------
 class TestIniherit(unittest.TestCase):
 
+  maxDiff = None
+
   #----------------------------------------------------------------------------
   def test_iniherit(self):
     files = {k: textwrap.dedent(v) for k, v in {
@@ -276,13 +278,22 @@ class TestIniherit(unittest.TestCase):
     self.assertEqual(parser.get('loggers', 'dkey'), 'more or less')
     with self.assertRaises(InterpolationMissingSuperError) as cm:
       parser.get('loggers', 'nkey')
-    self.assertMultiLineEqual(str(cm.exception), textwrap.dedent('''\
-      Bad value substitution:
-      \tsection: [loggers]
-      \toption : nkey
-      \tkey    : SUPER
-      \trawval : %(SUPER)s and boom!
-    '''))
+    if six.PY2:
+      err = textwrap.dedent('''\
+        Bad value substitution:
+        \tsection: [loggers]
+        \toption : nkey
+        \tkey    : SUPER
+        \trawval : %(SUPER)s and boom!
+      ''')
+    else:
+      err = (
+        "Bad value substitution:"
+        " option 'nkey' in section 'loggers'"
+        " contains an interpolation key 'SUPER' which is not a valid option name."
+        " Raw value: '%(SUPER)s and boom!'"
+      )
+    self.assertMultiLineEqual(str(cm.exception), err)
 
   #----------------------------------------------------------------------------
   def test_interpolation_super_invalid(self):
@@ -303,13 +314,22 @@ class TestIniherit(unittest.TestCase):
     parser.read('extend.ini')
     with self.assertRaises(InterpolationMissingSuperError) as cm:
       parser.get('DEFAULT', 'key2')
-    self.assertMultiLineEqual(str(cm.exception), textwrap.dedent('''\
-      Bad value substitution:
-      \tsection: [DEFAULT]
-      \toption : key2
-      \tkey    : SUPER
-      \trawval : %(SUPER)s and boom!
-    '''))
+    if six.PY2:
+      err = textwrap.dedent('''\
+        Bad value substitution:
+        \tsection: [DEFAULT]
+        \toption : key2
+        \tkey    : SUPER
+        \trawval : %(SUPER)s and boom!
+      ''')
+    else:
+      err = (
+        "Bad value substitution:"
+        " option 'key2' in section 'DEFAULT'"
+        " contains an interpolation key 'SUPER' which is not a valid option name."
+        " Raw value: '%(SUPER)s and boom!'"
+      )
+    self.assertMultiLineEqual(str(cm.exception), err)
 
   #----------------------------------------------------------------------------
   def test_interpolation_env(self):
@@ -339,21 +359,40 @@ class TestIniherit(unittest.TestCase):
     self.assertEqual(parser.get('section', 'key4'), 'default-value')
     with self.assertRaises(InterpolationMissingEnvError) as cm:
       parser.get('section', 'key3')
-    self.assertMultiLineEqual(str(cm.exception), textwrap.dedent('''\
-      Bad value substitution:
-      \tsection: [section]
-      \toption : key3
-      \tkey    : INIHERIT_TEST_NOEXIST
-      \trawval : %(ENV:INIHERIT_TEST_NOEXIST)s
-    '''))
+    if six.PY2:
+      err = textwrap.dedent('''\
+        Bad value substitution:
+        \tsection: [section]
+        \toption : key3
+        \tkey    : INIHERIT_TEST_NOEXIST
+        \trawval : %(ENV:INIHERIT_TEST_NOEXIST)s
+      ''')
+    else:
+      err = (
+        "Bad value substitution:"
+        " option 'key3' in section 'section'"
+        " contains an interpolation key 'INIHERIT_TEST_NOEXIST'"
+        " which is not a valid option name."
+        " Raw value: '%(ENV:INIHERIT_TEST_NOEXIST)s'"
+      )
+    self.assertMultiLineEqual(str(cm.exception), err)
     with self.assertRaises(InterpolationDepthError) as cm:
       parser.get('section', 'key5')
-    self.assertMultiLineEqual(str(cm.exception), textwrap.dedent('''\
-      Value interpolation too deeply recursive:
-      \tsection: [section]
-      \toption : key5
-      \trawval : %(ENV:INIHERIT_TEST_INFLOOP)s
-    '''))
+    if six.PY2:
+      err = textwrap.dedent('''\
+        Value interpolation too deeply recursive:
+        \tsection: [section]
+        \toption : key5
+        \trawval : %(ENV:INIHERIT_TEST_INFLOOP)s
+      ''')
+    else:
+      err = (
+        "Recursion limit exceeded in value substitution:"
+        " option 'key5' in section 'section'"
+        " contains an interpolation key which cannot be substituted in 10 steps."
+        " Raw value: '%(ENV:INIHERIT_TEST_INFLOOP)s'"
+      )
+    self.assertMultiLineEqual(str(cm.exception), err)
 
 
 #------------------------------------------------------------------------------

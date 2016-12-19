@@ -192,7 +192,7 @@ class IniheritMixin(object):
       base_interpolate = getattr(_real_ConfigParser, '_interpolate', None)
     return interpolation.interpolate(
       self, base_interpolate, section, option, rawval, vars)
-  if not hasattr(_real_ConfigParser, '_interpolate'):
+  if not hasattr(_real_ConfigParser, '_interpolate') and not six.PY3:
     warnings.warn(
       'ConfigParser did not have a "_interpolate" method'
       ' -- iniherit may be broken on this platform',
@@ -202,6 +202,7 @@ class IniheritMixin(object):
 #------------------------------------------------------------------------------
 # todo: i'm a little worried about the diamond inheritance here...
 class RawConfigParser(IniheritMixin, _real_RawConfigParser):
+  _DEFAULT_INTERPOLATION = interpolation.IniheritInterpolation()
   def __init__(self, *args, **kw):
     loader = kw.pop('loader', None)
     IniheritMixin.__init__(self, loader=loader)

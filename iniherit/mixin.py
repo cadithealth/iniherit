@@ -10,6 +10,7 @@ import six
 from six.moves import configparser as CP
 
 from .parser import IniheritMixin
+from .interpolation import BasicInterpolationMixin
 
 #------------------------------------------------------------------------------
 
@@ -17,6 +18,17 @@ from .parser import IniheritMixin
 
 raw_attrs = [attr for attr in dir(IniheritMixin) if not attr.startswith('__')]
 base_attrs = ['_interpolate']
+interpolation_attrs = [attr for attr in dir(BasicInterpolationMixin) if not attr.startswith('__')]
+
+_replacements = [
+  (IniheritMixin, CP.RawConfigParser, raw_attrs),
+  (IniheritMixin, CP.ConfigParser,    base_attrs),
+]
+
+if six.PY3:
+  _replacements += [
+    (BasicInterpolationMixin, CP.BasicInterpolation, interpolation_attrs),
+  ]
 
 #------------------------------------------------------------------------------
 def install_globally():
@@ -28,15 +40,12 @@ def install_globally():
   if hasattr(CP.RawConfigParser, '_iniherit_installed_'):
     return
   setattr(CP.RawConfigParser, '_iniherit_installed_', True)
-  for target, attrs in (
-      (CP.RawConfigParser, raw_attrs),
-      (CP.ConfigParser, base_attrs),
-    ):
+  for source, target, attrs in _replacements:
     for attr in attrs:
       if hasattr(target, attr):
         setattr(target,
                 '_iniherit_' + attr, getattr(target, attr))
-      meth = getattr(IniheritMixin, attr)
+      meth = getattr(source, attr)
       if six.callable(meth):
         if six.PY2:
           import new
@@ -53,10 +62,7 @@ def uninstall_globally():
   if not hasattr(CP.RawConfigParser, '_iniherit_installed_'):
     return
   delattr(CP.RawConfigParser, '_iniherit_installed_')
-  for target, attrs in (
-      (CP.RawConfigParser, raw_attrs),
-      (CP.ConfigParser, base_attrs),
-    ):
+  for source, target, attrs in _replacements:
     for attr in attrs:
       if hasattr(target, '_iniherit_' + attr):
         xattr = getattr(target, '_iniherit_' + attr)

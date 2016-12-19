@@ -9,16 +9,43 @@
 import re
 import os
 
+import six
 from six.moves import configparser as CP
+
+#------------------------------------------------------------------------------
+
+if six.PY3:
+  _real_BasicInterpolation              = CP.BasicInterpolation
+  _real_BasicInterpolation_before_get   = CP.BasicInterpolation.before_get
+else:
+  _real_BasicInterpolation              = object
+  _real_BasicInterpolation_before_get   = None
 
 #------------------------------------------------------------------------------
 class InterpolationMissingEnvError(CP.InterpolationMissingOptionError): pass
 class InterpolationMissingSuperError(CP.InterpolationMissingOptionError): pass
 
+
+#------------------------------------------------------------------------------
+class BasicInterpolationMixin(object):
+  def before_get(self, parser, section, option, value, defaults):
+    def base_interpolate(*args, **kw):
+      return _real_BasicInterpolation_before_get(parser._interpolation, *args, **kw)
+    return interpolate(parser, base_interpolate, section, option, value, defaults)
+
+
+#------------------------------------------------------------------------------
+class IniheritInterpolation(BasicInterpolationMixin, _real_BasicInterpolation):
+  # todo: rewrite this to use a more PY3-oriented approach...
+  pass
+
+
 #------------------------------------------------------------------------------
 _env_cre = re.compile(r'%\(ENV:([^:)]+)(:-([^)]*))?\)s', flags=re.DOTALL)
 _super_cre = re.compile(r'%\(SUPER(:-([^)]*))?\)s', flags=re.DOTALL)
 def interpolate(parser, base_interpolate, section, option, rawval, vars):
+  # todo: ugh. this should be rewritten so that it uses
+  #       `BasicInterpolationMixin` so as to be more "future-proof"...
   value = rawval
   depth = CP.MAX_INTERPOLATION_DEPTH
   erepl = lambda match: _env_replace(
