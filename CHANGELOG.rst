@@ -3,6 +3,13 @@ ChangeLog
 =========
 
 
+v0.3.6
+======
+
+* Added compatibility Python 3 of SUPER/ENV support
+* Fixed issue #6
+
+
 v0.3.5
 ======
 
