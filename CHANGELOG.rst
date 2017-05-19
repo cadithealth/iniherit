@@ -3,6 +3,15 @@ ChangeLog
 =========
 
 
+v0.3.7
+======
+
+* Added interpolation support for "%inherit" targets, e.g.::
+
+    %inherit = %(target)s.ini %(ENV:OTHER_TARGET)s.ini
+    target   = some-value
+
+
 v0.3.6
 ======
 
