@@ -114,6 +114,65 @@ class TestIniherit(unittest.TestCase):
     self.assertEqual(parser.get('section', 'kw3'), 'extend-kw3')
 
   #----------------------------------------------------------------------------
+  def test_iniherit_inheritTargetInterpolation(self):
+    files = {k: textwrap.dedent(v) for k, v in {
+      'base-without-interpolation.ini' : '''
+        [DEFAULT]
+        %inherit = dir/foo.ini
+        code = foo
+        [section]
+        %inherit = dir/bar.ini
+        code = %(ENV:THECODE:-noexist)s
+      ''',
+      'base-with-interpolation.ini' : '''
+        [DEFAULT]
+        %inherit = dir/%(code)s.ini
+        code = foo
+        [section]
+        %inherit = dir/%(ENV:THECODE:-noexist)s.ini
+        code = %(ENV:THECODE:-noexist)s
+      ''',
+      'base-with-cascading-interpolation.ini' : '''
+        [DEFAULT]
+        %inherit = dir/%(code)s.ini
+        code = foo
+        [section]
+        %inherit = dir/%(code)s.ini
+        code = %(ENV:THECODE:-noexist)s
+      ''',
+      'dir/foo.ini' : '''
+        [DEFAULT]
+        value = it-is-foo
+      ''',
+      'dir/bar.ini' : '''
+        [section]
+        value = it-is-bar
+      ''',
+    }.items()}
+    import os
+    os.environ['THECODE'] = 'bar'
+    parser = ConfigParser(loader=ByteLoader(files))
+    parser.read('base-without-interpolation.ini')
+    self.assertEqual(parser.get('DEFAULT', 'value'), 'it-is-foo')
+    self.assertEqual(parser.get('DEFAULT', 'code'), 'foo')
+    self.assertEqual(parser.get('section', 'value'), 'it-is-bar')
+    self.assertEqual(parser.get('section', 'code'), 'bar')
+    parser = ConfigParser(loader=ByteLoader(files))
+    parser.read('base-with-interpolation.ini')
+    self.assertEqual(parser.get('DEFAULT', 'value'), 'it-is-foo')
+    self.assertEqual(parser.get('DEFAULT', 'code'), 'foo')
+    self.assertEqual(parser.get('section', 'value'), 'it-is-bar')
+    self.assertEqual(parser.get('section', 'code'), 'bar')
+    # TODO: enable this when "%inherit" interpolation uses iniherit
+    #       interpolation for recursive interpolation...
+    # parser = ConfigParser(loader=ByteLoader(files))
+    # parser.read('base-with-cascading-interpolation.ini')
+    # self.assertEqual(parser.get('DEFAULT', 'value'), 'it-is-foo')
+    # self.assertEqual(parser.get('DEFAULT', 'code'), 'foo')
+    # self.assertEqual(parser.get('section', 'value'), 'it-is-bar')
+    # self.assertEqual(parser.get('section', 'code'), 'bar')
+
+  #----------------------------------------------------------------------------
   def test_iniherit_nameWithSpace(self):
     files = {k: textwrap.dedent(v) for k, v in {
       'base + space.ini' : '[DEFAULT]\nkw=word\n',

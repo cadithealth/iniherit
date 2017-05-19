@@ -101,6 +101,12 @@ class IniheritMixin(object):
     return ret
 
   #----------------------------------------------------------------------------
+  def _interpolate_inherit(self, parser, section, option, value):
+    ## TODO: ugh. this just doesn't feel "right"...
+    vars = dict(parser.items(section))
+    return self._interpolate(section, option, value, vars)
+
+  #----------------------------------------------------------------------------
   def _readRecursive(self, fp, fpname, encoding=None):
     ret = self._makeParser()
     src = self._makeParser()
@@ -109,6 +115,7 @@ class IniheritMixin(object):
     if src.has_option(self.IM_DEFAULTSECT, self.IM_INHERITTAG):
       inilist = src.get(self.IM_DEFAULTSECT, self.IM_INHERITTAG)
       src.remove_option(self.IM_DEFAULTSECT, self.IM_INHERITTAG)
+      inilist = self._interpolate_inherit(src, self.IM_DEFAULTSECT, self.IM_INHERITTAG, inilist)
       for curname in inilist.split():
         optional = curname.startswith('?')
         if optional:
@@ -126,6 +133,7 @@ class IniheritMixin(object):
         continue
       inilist = src.get(section, self.IM_INHERITTAG)
       src.remove_option(section, self.IM_INHERITTAG)
+      inilist = self._interpolate_inherit(src, section, self.IM_INHERITTAG, inilist)
       for curname in inilist.split():
         optional = curname.startswith('?')
         if optional:
