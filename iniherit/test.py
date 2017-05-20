@@ -453,6 +453,41 @@ class TestIniherit(unittest.TestCase):
       )
     self.assertMultiLineEqual(str(cm.exception), err)
 
+  #----------------------------------------------------------------------------
+  def test_cascading_env_interpolate(self):
+    # test that if a key contains an interpolation of another key
+    # can in turn interpolate an "%(ENV:...)s" style expansion.
+    files = {k: textwrap.dedent(v) for k, v in {
+      'config.ini' : '''
+        [DEFAULT]
+        kw1 = %(kw2)s
+        kw2 = %(ENV:UNDEFINED:-defval)s
+      ''',
+    }.items()}
+    parser = ConfigParser(loader=ByteLoader(files))
+    parser.read('config.ini')
+    self.assertEqual(parser.get('DEFAULT', 'kw2'), 'defval')
+    self.assertEqual(parser.get('DEFAULT', 'kw1'), 'defval')
+
+  #----------------------------------------------------------------------------
+  def test_subclass_override(self):
+    # test that subclasses that override `ConfigParser._interpolate`,
+    # but that still directly call it, works...
+    class SomeOtherConfigParser(ConfigParser):
+      def _interpolate(self, section, option, rawval, vars):
+        return ConfigParser._interpolate(self, section, option, rawval, vars)
+    files = {k: textwrap.dedent(v) for k, v in {
+      'config.ini' : '''
+        [DEFAULT]
+        kw1 = %(kw2)s
+        kw2 = %(ENV:SOMEVAL:-defval)s
+      ''',
+    }.items()}
+    parser = SomeOtherConfigParser(loader=ByteLoader(files))
+    parser.read('config.ini')
+    self.assertEqual(parser.get('DEFAULT', 'kw2'), 'defval')
+    self.assertEqual(parser.get('DEFAULT', 'kw1'), 'defval')
+
 
 #------------------------------------------------------------------------------
 # end of $Id$

@@ -60,7 +60,26 @@ def interpolate(parser, base_interpolate, section, option, rawval, vars):
     raise CP.InterpolationDepthError(option, section, rawval)
   if '%(SUPER)s' in value:
     raise InterpolationMissingSuperError(option, section, rawval, 'SUPER')
-  return base_interpolate(parser, section, option, value, vars)
+  if base_interpolate is None:
+    return value
+  vars = dict(vars)
+  while True:
+    # ok, this is... uh... "tricky"... basically, we don't want to
+    # pre-emptively expand SUPER & ENV expressions because then we may
+    # trip invalid expressions that aren't actually used. thus, we
+    # only expand keys that are actually requested, and we detect by
+    # catching InterpolationMissingOptionError's...
+    try:
+      return base_interpolate(parser, section, option, value, vars)
+    except CP.InterpolationMissingOptionError as err:
+      for key, val in list(vars.items()):
+        if err.reference.lower() in val.lower():
+          newval = interpolate(parser, None, section, key, val, vars)
+          if newval != val:
+            vars[key] = newval
+            break
+      else:
+        raise
 
 #------------------------------------------------------------------------------
 def interpolate_super(parser, src, dst, section, option, value):
