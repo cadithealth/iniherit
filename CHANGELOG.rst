@@ -3,6 +3,13 @@ ChangeLog
 =========
 
 
+v0.3.9
+======
+
+* Added support for SafeConfigParser in global_install
+* Added support for recursive evaluation of "%(ENV:...)s" expansions
+
+
 v0.3.8
 ======
 
