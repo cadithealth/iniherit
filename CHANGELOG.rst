@@ -3,6 +3,12 @@ ChangeLog
 =========
 
 
+v0.3.8
+======
+
+* Fixed interpolated "%inherit" values for Python pre-2.7.12
+
+
 v0.3.7
 ======
 
