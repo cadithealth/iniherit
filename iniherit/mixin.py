@@ -21,8 +21,9 @@ base_attrs = ['_interpolate']
 interpolation_attrs = [attr for attr in dir(BasicInterpolationMixin) if not attr.startswith('__')]
 
 _replacements = [
-  (IniheritMixin, CP.RawConfigParser, raw_attrs),
-  (IniheritMixin, CP.ConfigParser,    base_attrs),
+  (IniheritMixin, CP.RawConfigParser,  raw_attrs),
+  (IniheritMixin, CP.ConfigParser,     base_attrs),
+  (IniheritMixin, CP.SafeConfigParser, base_attrs),
 ]
 
 if six.PY3:
