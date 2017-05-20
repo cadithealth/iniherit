@@ -48,6 +48,13 @@ class Loader(object):
 
 
 #------------------------------------------------------------------------------
+def _get_real_interpolate(parser):
+  # todo: should this be sensitive to `parser`?...
+  return \
+    getattr(_real_ConfigParser, '_iniherit__interpolate', None) \
+    or getattr(_real_ConfigParser, '_interpolate', None)
+
+#------------------------------------------------------------------------------
 # TODO: this would probably be *much* simpler with meta-classes...
 
 #------------------------------------------------------------------------------
@@ -93,18 +100,12 @@ class IniheritMixin(object):
       self._iniherit__read(fp, fpname)
 
   #----------------------------------------------------------------------------
-  def _makeParser(self):
-    ret = _real_RawConfigParser()
+  def _makeParser(self, raw=True):
+    ret = _real_RawConfigParser() if raw else _real_ConfigParser()
     ret.inherit = False
     ## TODO: any other configurations that need to be copied into `ret`??...
     ret.optionxform = self.optionxform
     return ret
-
-  #----------------------------------------------------------------------------
-  def _interpolate_inherit(self, parser, section, option, value):
-    ## TODO: ugh. this just doesn't feel "right"...
-    vars = dict(parser.items(section))
-    return self._interpolate(section, option, value, vars)
 
   #----------------------------------------------------------------------------
   def _readRecursive(self, fp, fpname, encoding=None):
@@ -115,7 +116,8 @@ class IniheritMixin(object):
     if src.has_option(self.IM_DEFAULTSECT, self.IM_INHERITTAG):
       inilist = src.get(self.IM_DEFAULTSECT, self.IM_INHERITTAG)
       src.remove_option(self.IM_DEFAULTSECT, self.IM_INHERITTAG)
-      inilist = self._interpolate_inherit(src, self.IM_DEFAULTSECT, self.IM_INHERITTAG, inilist)
+      inilist = self._interpolate_with_vars(
+        src, self.IM_DEFAULTSECT, self.IM_INHERITTAG, inilist)
       for curname in inilist.split():
         optional = curname.startswith('?')
         if optional:
@@ -133,7 +135,8 @@ class IniheritMixin(object):
         continue
       inilist = src.get(section, self.IM_INHERITTAG)
       src.remove_option(section, self.IM_INHERITTAG)
-      inilist = self._interpolate_inherit(src, section, self.IM_INHERITTAG, inilist)
+      inilist = self._interpolate_with_vars(
+        src, section, self.IM_INHERITTAG, inilist)
       for curname in inilist.split():
         optional = curname.startswith('?')
         if optional:
@@ -193,11 +196,22 @@ class IniheritMixin(object):
       _real_RawConfigParser.set(parser, section, option, value)
 
   #----------------------------------------------------------------------------
+  def _interpolate_with_vars(self, parser, section, option, rawval):
+    ## TODO: ugh. this just doesn't feel "right"...
+    try:
+      vars = dict(parser.items(section, raw=True))
+    except:
+      vars = dict(parser.items(section))
+    if not isinstance(parser, _real_ConfigParser):
+      parser = self._makeParser(raw=False)
+    base_interpolate = _get_real_interpolate(parser)
+    return interpolation.interpolate(
+      parser, base_interpolate, section, option, rawval, vars)
+
+  #----------------------------------------------------------------------------
   # todo: yikes! overriding a private method!...
   def _interpolate(self, section, option, rawval, vars):
-    base_interpolate = getattr(_real_ConfigParser, '_iniherit__interpolate', None)
-    if not base_interpolate:
-      base_interpolate = getattr(_real_ConfigParser, '_interpolate', None)
+    base_interpolate = _get_real_interpolate(self)
     return interpolation.interpolate(
       self, base_interpolate, section, option, rawval, vars)
   if not hasattr(_real_ConfigParser, '_interpolate') and not six.PY3:
